@@ -1,12 +1,64 @@
 from typing import Optional, Tuple
 from pathlib import Path
 
-
+import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision.transforms import transforms
 
-from src.datamodules.datasets.jigsawaudio_dataset import JigsawAudioDataset
+from src.datamodules.datasets.jigsawaudio_dataset import AudioFolderJigsawDataset
+
+def siamese_collate(batch):
+    """
+    This collator is used in Jigsaw approach.
+    Input:
+        batch: Example
+                batch = [
+                    {"data": [img1,], "label": [lbl1, ]},        #img1
+                    {"data": [img2,], "label": [lbl2, ]},        #img2
+                    .
+                    .
+                    {"data": [imgN,], "label": [lblN, ]},        #imgN
+                ]
+                where:
+                    img{x} is a tensor of size: num_towers x C x H x W
+                    lbl{x} is an integer
+    Returns: Example output:
+                torch.tensor([img1_0, ..., imgN_0]),
+                torch.tensor([lbl1, ..., lblN])
+
+                where the output is of dimension: (N * num_towers) x C x H x W
+
+    see https://github.com/facebookresearch/vissl/blob/aa3f7cc33b3b7806e15593083aedc383d85e4a53/vissl/data/collators/siamese_collator.py
+    """
+    assert "data" in batch[0], "data not found in sample"
+    assert "label" in batch[0], "label not found in sample"
+    num_data_sources = len(batch[0]["data"])
+    batch_size = len(batch)
+    data = [x["data"] for x in batch]
+    labels = [x["label"] for x in batch]
+
+    output_data, output_label = [], []
+    for idx in range(num_data_sources):
+        # each image is of shape: num_towers x C x H x W
+        # num_towers x C x H x W -> N x num_towers x C x H x W
+        idx_data = torch.stack([data[i][idx] for i in range(batch_size)])
+        idx_labels = [labels[i][idx] for i in range(batch_size)]
+        batch_size, num_siamese_towers, channels, height, width = idx_data.size()
+        # N x num_towers x C x H x W -> (N * num_towers) x C x H x W
+        idx_data = idx_data.view(
+            batch_size * num_siamese_towers, channels, height, width
+        )
+        output_data.append(idx_data)
+        should_flatten = False
+        if idx_labels[0].ndim == 1:
+            should_flatten = True
+        idx_labels = torch.stack(idx_labels).squeeze()
+        if should_flatten:
+            idx_labels = idx_labels.flatten()
+        output_label.append(idx_labels)
+
+    return output_data, output_label
 
 
 class JigsawAudioDataModule(LightningDataModule):
@@ -36,9 +88,16 @@ class JigsawAudioDataModule(LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
-        sample_rate: int = 44100,
-        nb_timesteps: int = 44100 * 3,
+        sample_rate: float = 44100.0,
+        nb_timesteps: int = 44100 * 5,
         nb_channels: int = 1,
+        patch_len: int = 36,
+        nb_patches: int = 5,
+        n_fft: int = 2048,
+        hop_length: int = 512,
+        f_min: float = 27.5,
+        f_max: int = 16000,
+        n_mels: int = 256,
     ):
         super().__init__()
 
@@ -53,6 +112,13 @@ class JigsawAudioDataModule(LightningDataModule):
 
         self.nb_channels = nb_channels
         self.nb_timesteps = nb_timesteps
+        self.patch_len = patch_len
+        self.nb_patches = nb_patches
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.f_min = f_min
+        self.f_max = f_max
+        self.n_mels = n_mels
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -68,23 +134,32 @@ class JigsawAudioDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         """Load data. Set variables: self.data_train, self.data_val, self.data_test."""
-        self.train_set = JigsawAudioDataset(
+
+        common_args = {
+            "nb_channels": self.nb_channels,
+            "sample_rate": self.sample_rate,
+            "patch_len": self.patch_len,
+            "nb_patches": self.nb_patches,
+            "n_fft": self.n_fft,
+            "hop_length": self.hop_length,
+            "f_min": self.f_min,
+            "f_max": self.f_max,
+            "n_mels": self.n_mels,
+        }
+        self.train_set = AudioFolderJigsawDataset(
             root=Path(self.data_dir, self.train_dir),
-            min_chunk_length=self.nb_timesteps,
             random_chunk_length=self.nb_timesteps,
-            nb_channels=self.nb_channels,
+            **common_args,
         )
-        self.test_set = JigsawAudioDataset(
-            root=Path(self.data_dir, self.train_dir),
-            min_chunk_length=self.nb_timesteps,
+        self.test_set = AudioFolderJigsawDataset(
+            root=Path(self.data_dir, self.valid_dir),
             random_chunk_length=self.nb_timesteps,
-            nb_channels=self.nb_channels,
+            **common_args,
         )
-        self.valid_set = JigsawAudioDataset(
-            root=Path(self.data_dir, self.train_dir),
-            min_chunk_length=self.nb_timesteps,
+        self.valid_set = AudioFolderJigsawDataset(
+            root=Path(self.data_dir, self.test_dir),
             random_chunk_length=self.nb_timesteps,
-            nb_channels=self.nb_channels,
+            **common_args,
         )
 
         self.dims = self.train_set[0][0].shape

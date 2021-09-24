@@ -8,7 +8,12 @@ test_dir: "test"
 num_workers: 0
 pin_memory: False
 sample_rate: 44100
-nb_timesteps: 132300  # chunk lenght in samples
+nb_timesteps: 220500  # chunk lenght in samples
 nb_channels: 1
 nb_patches: 5   # nb of patches per chunk
 patch_len: 36  # patch len in Frames
+n_fft: 2048
+hop_length: 512
+n_mels: 256
+f_min: 27.5
+f_max: 16000
