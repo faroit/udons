@@ -1,0 +1,14 @@
+_target_: src.datamodules.jigsawaudio_datamodule.JigsawAudioDataModule
+
+data_dir: ${data_dir} # data_dir is specified in config.yaml
+batch_size: 64
+train_dir: "train"
+valid_dir: "valid"
+test_dir: "test" 
+num_workers: 0
+pin_memory: False
+sample_rate: 44100
+nb_timesteps: 132300  # chunk lenght in samples
+nb_channels: 1
+nb_patches: 5   # nb of patches per chunk
+patch_len: 36  # patch len in Frames

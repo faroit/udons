@@ -5,8 +5,8 @@
 
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
-  - override /model: mnist_model.yaml
-  - override /datamodule: mnist_datamodule.yaml
+  - override /model: jigsaw_model.yaml
+  - override /datamodule: audiofolder_datamodule.yaml
   - override /callbacks: default.yaml
   - override /logger: null
 
