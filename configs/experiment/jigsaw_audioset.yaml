@@ -17,13 +17,13 @@ seed: 12345
 
 trainer:
   min_epochs: 1
-  max_epochs: 250
+  max_epochs: 300
   gradient_clip_val: 0.5
 
 model:
   lr: 0.002
-  nb_patches: 3  # TODO: get these from data hparams
-  nb_classes: 6
+  nb_patches: 5  # TODO: get these from data hparams
+  nb_classes: 120
   nb_channels: 1
 
 datamodule:
@@ -32,6 +32,7 @@ datamodule:
   test_dir: test_10
   batch_size: 128
   num_workers: 24
-  patch_len: 64
-  nb_patches: 3  # TODO: get these from data hparams
+  patch_len: 32
+  nb_patches: 5  # TODO: get these from data hparams
   nb_channels: 1 # TODOL get from data hparams
+  patch_jitter_min: 0

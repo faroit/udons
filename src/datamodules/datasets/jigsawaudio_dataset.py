@@ -16,6 +16,7 @@ from typing import List, Tuple, Union
 
 class TimePatcher(object):
     """Sample patches over last axis of 3d Tensor"""
+
     def __init__(self, patch_len=36, nb_patches=5, patch_jitter_min=5):
         self.patch_len = patch_len
         self.nb_patches = nb_patches
@@ -32,9 +33,7 @@ class TimePatcher(object):
         patches = []
         for i in range(self.nb_patches):
             offset = i * self.patch_len
-            patch = x[
-                ..., offset + jitter[i] : offset + self.patch_len + jitter[i]
-            ]
+            patch = x[..., offset + jitter[i] : offset + self.patch_len + jitter[i]]
             patches.append(np.copy(patch))
 
         return patches
@@ -47,7 +46,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         transform: Callable = None,
         sample_rate: float = 44100.0,
         random_chunk_length: int = 44100 * 5,
-        extensions: List[str] =[".wav", ".flac", ".ogg"],
+        extensions: List[str] = [".wav", ".flac", ".ogg"],
         nb_channels: int = 1,
         patch_len: int = 32,
         nb_patches: int = 5,
@@ -56,6 +55,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         f_min: float = 27.5,
         f_max: int = 16000,
         n_mels: int = 256,
+        patch_jitter_min: int = 5,
     ):
         self.root = root
 
@@ -67,6 +67,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         self.audio_data = list(tqdm.tqdm(self.get_audio_data()))
         self.nb_patches = nb_patches
         self.patch_len = patch_len
+        self.patch_jitter_min = patch_jitter_min
         if transform is None:
             self.transform = transforms.Compose(
                 [
@@ -78,13 +79,19 @@ class AudioFolderJigsawDataset(data.Dataset):
                         f_max=f_max,
                         n_mels=n_mels,
                     ),
-                    TimePatcher(patch_len=self.patch_len, nb_patches=self.nb_patches, patch_jitter_min=5)
+                    TimePatcher(
+                        patch_len=self.patch_len,
+                        nb_patches=self.nb_patches,
+                        patch_jitter_min=self.patch_jitter_min,
+                    ),
                 ]
             )
         else:
             self.tranform = transform
 
-        self.permutations = np.array(list(itertools.permutations(list(range(self.nb_patches)))))
+        self.permutations = np.array(
+            list(itertools.permutations(list(range(self.nb_patches))))
+        )
 
     def __getitem__(self, index: int) -> torch.Tensor:
         """Get dataset item
@@ -168,7 +175,9 @@ class AudioFolderJigsawDataset(data.Dataset):
             input_patches (List[torch.tensor]): list of torch tensors
         """
         perm_index = np.random.randint(permutations.shape[0])
-        shuffled_patches = [torch.FloatTensor(patches[i]) for i in permutations[perm_index]]
+        shuffled_patches = [
+            torch.FloatTensor(patches[i]) for i in permutations[perm_index]
+        ]
         # num_towers x C x H x W
         input_data = torch.stack(shuffled_patches)
         out_label = torch.Tensor([perm_index]).long()

@@ -93,6 +93,7 @@ class JigsawAudioDataModule(LightningDataModule):
         f_min: float = 27.5,
         f_max: int = 16000,
         n_mels: int = 256,
+        patch_jitter_min: int = 5
     ):
         super().__init__()
 
@@ -114,6 +115,7 @@ class JigsawAudioDataModule(LightningDataModule):
         self.f_min = f_min
         self.f_max = f_max
         self.n_mels = n_mels
+        self.patch_jitter_min = patch_jitter_min
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -140,6 +142,7 @@ class JigsawAudioDataModule(LightningDataModule):
             "f_min": self.f_min,
             "f_max": self.f_max,
             "n_mels": self.n_mels,
+            "patch_jitter_min": self.patch_jitter_min
         }
         self.train_set = AudioFolderJigsawDataset(
             root=Path(self.data_dir, self.train_dir),
