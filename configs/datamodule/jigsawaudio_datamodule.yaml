@@ -11,7 +11,7 @@ sample_rate: 44100
 nb_timesteps: 220500  # chunk lenght in samples
 nb_channels: 1
 nb_patches: 5   # nb of patches per chunk
-patch_len: 36  # patch len in Frames
+patch_len: 32  # patch len in Frames
 n_fft: 2048
 hop_length: 512
 n_mels: 256

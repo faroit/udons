@@ -1,3 +1,4 @@
+from src.models.modules.audiojigsaw_net import AlexNetJigsaw
 from typing import Any, List
 
 import torch
@@ -8,27 +9,11 @@ from src.models.modules.simple_dense_net import SimpleDenseNet
 
 
 class JigsawModel(LightningModule):
-    """
-    Example of LightningModule for MNIST classification.
-
-    A LightningModule organizes your PyTorch code into 5 sections:
-        - Computations (init).
-        - Train loop (training_step)
-        - Validation loop (validation_step)
-        - Test loop (test_step)
-        - Optimizers (configure_optimizers)
-
-    Read the docs:
-        https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html
-    """
-
     def __init__(
         self,
-        input_size: int = 784,
-        lin1_size: int = 256,
-        lin2_size: int = 256,
-        lin3_size: int = 256,
-        output_size: int = 10,
+        nb_patches: int = 5,
+        nb_classes: int = 5*4*3*2*1,
+        nb_channels: int = 1,
         lr: float = 0.001,
         weight_decay: float = 0.0005,
     ):
@@ -38,7 +23,7 @@ class JigsawModel(LightningModule):
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
 
-        self.model = SimpleDenseNet(hparams=self.hparams)
+        self.model = AlexNetJigsaw(hparams=self.hparams)
 
         # loss function
         self.criterion = torch.nn.CrossEntropyLoss()

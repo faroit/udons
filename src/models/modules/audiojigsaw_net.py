@@ -1,4 +1,5 @@
 
+import pathlib
 from torch import nn
 import torch
 
@@ -43,11 +44,10 @@ class SiameseConcatView(nn.Module):
 
 
 class AlexNetJigsaw(nn.Module):
-    def __init__(self, num_patches=5, num_classes: int = 1000) -> None:
+    def __init__(self, hparams: dict) -> None:
         super(AlexNetJigsaw, self).__init__()
-        self.num_patches = num_patches
         self.patch_model = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
+            nn.Conv2d(hparams["nb_channels"], 64, kernel_size=7, stride=2, padding=2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(64, 192, kernel_size=5, padding=2),
@@ -62,21 +62,41 @@ class AlexNetJigsaw(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.AdaptiveAvgPool2d((6, 6)),
             nn.Flatten(1),
+            nn.Dropout(),
+            nn.Linear(256 * 6 * 6, 512),
+            nn.ReLU(inplace=True)
         )
-        self.unpatch = SiameseConcatView(self.num_patches)
+        self.unpatch = SiameseConcatView(hparams["nb_patches"])
         self.classifier = nn.Sequential(
             nn.Dropout(),
-            nn.Linear(256 * 6 * 6, 4096),
+            nn.Linear(512 * hparams["nb_patches"], 4096),
             nn.ReLU(inplace=True),
-            nn.Dropout(),
-            nn.Linear(4096, 4096),
-            nn.ReLU(inplace=True),
-            nn.Linear(4096, num_classes),
+            nn.Linear(4096, hparams["nb_classes"]),
         )
 
     def forward(self, patched_x: torch.Tensor) -> torch.Tensor:
+        """Forward pass of sigsaw model
+        
+            input args: (N * num_towers) x C x H x W
+            output: (N x num_casses)
+        """
         patched_x = self.patch_model(patched_x)
         x = self.unpatch(patched_x)
         x = self.classifier(x)
         return x
 
+
+if __name__ == "__main__":
+    from torch.autograd import Variable
+    from torchvision import datasets, transforms
+
+    # test
+    hparams = {}
+    hparams["nb_patches"] = 5
+    hparams["nb_classes"] = 1000
+    hparams["nb_channels"] = 1
+    model = AlexNetJigsaw(hparams)
+    # patch size divisionable by 32!
+    x = torch.rand(5*16, 1, 128, 32)
+    y = model(x)
+    print(y.shape)

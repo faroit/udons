@@ -49,7 +49,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         random_chunk_length: int = 44100 * 5,
         extensions: List[str] =[".wav", ".flac", ".ogg"],
         nb_channels: int = 1,
-        patch_len: int = 36,
+        patch_len: int = 32,
         nb_patches: int = 5,
         n_fft: int = 2048,
         hop_length: int = 512,
@@ -64,11 +64,10 @@ class AudioFolderJigsawDataset(data.Dataset):
         self.random_chunk_length = random_chunk_length
         self.nb_channels = nb_channels
         self.extensions = extensions
-        self.audio_data = list(self.get_audio_data())
-
+        self.audio_data = list(tqdm.tqdm(self.get_audio_data()))
         self.nb_patches = nb_patches
         self.patch_len = patch_len
-        if transform is not None:
+        if transform is None:
             self.transform = transforms.Compose(
                 [
                     torchaudio.transforms.MelSpectrogram(
@@ -82,6 +81,8 @@ class AudioFolderJigsawDataset(data.Dataset):
                     TimePatcher(patch_len=self.patch_len, nb_patches=self.nb_patches, patch_jitter_min=5)
                 ]
             )
+        else:
+            self.tranform = transform
 
         self.permutations = np.array(list(itertools.permutations(list(range(self.nb_patches)))))
 
@@ -118,6 +119,9 @@ class AudioFolderJigsawDataset(data.Dataset):
         audio = self.transform_audio(audio)
         return self.shuffle_and_get_label(audio, self.permutations)
 
+    def __len__(self) -> int:
+        return len(self.audio_data)
+
     def transform_audio(self, audio: torch.Tensor) -> torch.Tensor:
         if self.transform is not None:
             audio = self.transform(audio)
@@ -128,7 +132,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         # also extract metadata from audio to be used for chunking
         p = Path(self.root)
         for extension in self.extensions:
-            for audio_path in tqdm.tqdm(p.glob(f"**/*{extension}")):
+            for audio_path in p.glob(f"**/*{extension}"):
                 info = self.load_info(audio_path)
                 if not info["samplerate"] == self.sample_rate:
                     continue
@@ -193,4 +197,4 @@ if __name__ == "__main__":
 
     data = AudioFolderJigsawDataset(args.root)
     for audio in data:
-        print(audio[0].shape)
+        print(audio["data"].shape)

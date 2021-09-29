@@ -3,8 +3,7 @@ from pathlib import Path
 
 import torch
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import DataLoader, Dataset, random_split
-from torchvision.transforms import transforms
+from torch.utils.data import DataLoader, Dataset
 
 from src.datamodules.datasets.jigsawaudio_dataset import AudioFolderJigsawDataset
 
@@ -33,32 +32,28 @@ def siamese_collate(batch):
     """
     assert "data" in batch[0], "data not found in sample"
     assert "label" in batch[0], "label not found in sample"
-    num_data_sources = len(batch[0]["data"])
+    num_data_sources = 1
     batch_size = len(batch)
     data = [x["data"] for x in batch]
     labels = [x["label"] for x in batch]
 
-    output_data, output_label = [], []
-    for idx in range(num_data_sources):
-        # each image is of shape: num_towers x C x H x W
-        # num_towers x C x H x W -> N x num_towers x C x H x W
-        idx_data = torch.stack([data[i][idx] for i in range(batch_size)])
-        idx_labels = [labels[i][idx] for i in range(batch_size)]
-        batch_size, num_siamese_towers, channels, height, width = idx_data.size()
-        # N x num_towers x C x H x W -> (N * num_towers) x C x H x W
-        idx_data = idx_data.view(
-            batch_size * num_siamese_towers, channels, height, width
-        )
-        output_data.append(idx_data)
-        should_flatten = False
-        if idx_labels[0].ndim == 1:
-            should_flatten = True
-        idx_labels = torch.stack(idx_labels).squeeze()
-        if should_flatten:
-            idx_labels = idx_labels.flatten()
-        output_label.append(idx_labels)
+    # each image is of shape: num_towers x C x H x W
+    # num_towers x C x H x W -> N x num_towers x C x H x W
+    idx_data = torch.stack([data[i] for i in range(batch_size)])
+    idx_labels = [labels[i] for i in range(batch_size)]
+    batch_size, num_siamese_towers, channels, height, width = idx_data.size()
+    # N x num_towers x C x H x W -> (N * num_towers) x C x H x W
+    idx_data = idx_data.view(
+        batch_size * num_siamese_towers, channels, height, width
+    )
+    should_flatten = False
+    if idx_labels[0].ndim == 1:
+        should_flatten = True
+    idx_labels = torch.stack(idx_labels).squeeze()
+    if should_flatten:
+        idx_labels = idx_labels.flatten()
 
-    return output_data, output_label
+    return idx_data, idx_labels
 
 
 class JigsawAudioDataModule(LightningDataModule):
@@ -162,7 +157,7 @@ class JigsawAudioDataModule(LightningDataModule):
             **common_args,
         )
 
-        self.dims = self.train_set[0][0].shape
+        self.dims = self.train_set[0]["data"][0].shape
 
     def train_dataloader(self):
         return DataLoader(
@@ -171,6 +166,7 @@ class JigsawAudioDataModule(LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             shuffle=True,
+            collate_fn=siamese_collate
         )
 
     def val_dataloader(self):
@@ -180,6 +176,7 @@ class JigsawAudioDataModule(LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             shuffle=False,
+            collate_fn=siamese_collate
         )
 
     def test_dataloader(self):
@@ -189,4 +186,5 @@ class JigsawAudioDataModule(LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             shuffle=False,
+            collate_fn=siamese_collate
         )
