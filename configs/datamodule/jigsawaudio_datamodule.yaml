@@ -10,7 +10,7 @@ pin_memory: False
 sample_rate: 44100
 nb_timesteps: 220500  # chunk lenght in samples
 nb_channels: 1
-nb_patches: 5   # nb of patches per chunk
+nb_patches: 3   # nb of patches per chunk
 patch_len: 32  # patch len in Frames
 n_fft: 2048
 hop_length: 512

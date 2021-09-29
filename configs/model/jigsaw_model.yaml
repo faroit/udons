@@ -1,6 +1,6 @@
 _target_: src.models.jigsaw_model.JigsawModel
 
-nb_patches: 5  # TODO: get these from data hparams
+nb_patches: 3  # TODO: get these from data hparams
 nb_classes: 120
 nb_channels: 1
 lr: 0.001

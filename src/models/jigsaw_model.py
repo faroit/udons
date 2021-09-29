@@ -5,14 +5,12 @@ import torch
 from pytorch_lightning import LightningModule
 from torchmetrics.classification.accuracy import Accuracy
 
-from src.models.modules.simple_dense_net import SimpleDenseNet
-
 
 class JigsawModel(LightningModule):
     def __init__(
         self,
-        nb_patches: int = 5,
-        nb_classes: int = 5*4*3*2*1,
+        nb_patches: int = 3,
+        nb_classes: int = 6,
         nb_channels: int = 1,
         lr: float = 0.001,
         weight_decay: float = 0.0005,
@@ -22,7 +20,7 @@ class JigsawModel(LightningModule):
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
-
+        print(self.hparams)
         self.model = AlexNetJigsaw(hparams=self.hparams)
 
         # loss function
