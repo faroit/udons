@@ -22,8 +22,8 @@ trainer:
 
 model:
   lr: 0.0001
-  nb_patches: 4  # TODO: get these from data hparams
-  nb_classes: 24
+  nb_patches: 3  # TODO: get these from data hparams
+  nb_classes: 6
   nb_channels: 1
 
 datamodule:
@@ -31,7 +31,7 @@ datamodule:
   valid_dir: dev-clean
   test_dir: test-clean
   batch_size: 64
-  nb_patches: 4  # TODO: get these from data hparams
+  nb_patches: 3  # TODO: get these from data hparams
   num_workers: 32
   patch_len: 32
   n_fft: 400
@@ -42,5 +42,10 @@ datamodule:
   sample_rate: 16000
   nb_timesteps: 48000  # chunk lenght in samples
   nb_channels: 1 # TODOL get from data hparams
-  patch_jitter_min: 3
-  patch_jitter_max: 12
+  patch_jitter_min: -1
+  patch_jitter_max: 0
+
+logger:
+  wandb:
+    tags: ["best_model", "librispeech"]
+    notes: "LibriSpeech"
