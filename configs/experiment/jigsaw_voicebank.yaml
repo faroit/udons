@@ -21,21 +21,26 @@ trainer:
   gradient_clip_val: 0.5
 
 model:
-  lr: 0.001
-  nb_patches: 3  # TODO: get these from data hparams
-  nb_classes: 6
+  lr: 0.0001
+  nb_patches: 4  # TODO: get these from data hparams
+  nb_classes: 24
   nb_channels: 1
 
 datamodule:
-  train_dir: balanced_train_10
-  valid_dir: test_10
-  test_dir: test_10
-  batch_size: 128
+  train_dir: clean_trainset_28spk_16k_wav
+  valid_dir: clean_testset_16k_wav
+  test_dir: clean_testset_16k_wav
+  batch_size: 64
+  nb_patches: 4  # TODO: get these from data hparams
   num_workers: 32
   patch_len: 32
-  nb_patches: 3  # TODO: get these from data hparams
+  n_fft: 400
+  hop_length: 100
+  n_mels: 128
+  f_min: 27.5
+  f_max: 16000
+  sample_rate: 16000
+  nb_timesteps: 48000  # chunk lenght in samples
   nb_channels: 1 # TODOL get from data hparams
-  patch_jitter_min: -1
+  patch_jitter_min: 3
   patch_jitter_max: 12
-  sample_rate: 44100
-  nb_timesteps: 220500  # chunk lenght in samples

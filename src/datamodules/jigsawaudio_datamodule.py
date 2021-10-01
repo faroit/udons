@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from src.datamodules.datasets.jigsawaudio_dataset import AudioFolderJigsawDataset
 
+
 def siamese_collate(batch):
     """
     This collator is used in Jigsaw approach.
@@ -43,9 +44,7 @@ def siamese_collate(batch):
     idx_labels = [labels[i] for i in range(batch_size)]
     batch_size, num_siamese_towers, channels, height, width = idx_data.size()
     # N x num_towers x C x H x W -> (N * num_towers) x C x H x W
-    idx_data = idx_data.view(
-        batch_size * num_siamese_towers, channels, height, width
-    )
+    idx_data = idx_data.view(batch_size * num_siamese_towers, channels, height, width)
     should_flatten = False
     if idx_labels[0].ndim == 1:
         should_flatten = True
@@ -93,7 +92,8 @@ class JigsawAudioDataModule(LightningDataModule):
         f_min: float = 27.5,
         f_max: int = 16000,
         n_mels: int = 256,
-        patch_jitter_min: int = 5
+        patch_jitter_min: int = 5,
+        patch_jitter_max: int = 12,
     ):
         super().__init__()
 
@@ -116,6 +116,7 @@ class JigsawAudioDataModule(LightningDataModule):
         self.f_max = f_max
         self.n_mels = n_mels
         self.patch_jitter_min = patch_jitter_min
+        self.patch_jitter_max = patch_jitter_max
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -142,7 +143,8 @@ class JigsawAudioDataModule(LightningDataModule):
             "f_min": self.f_min,
             "f_max": self.f_max,
             "n_mels": self.n_mels,
-            "patch_jitter_min": self.patch_jitter_min
+            "patch_jitter_min": self.patch_jitter_min,
+            "patch_jitter_max": self.patch_jitter_max,
         }
         self.train_set = AudioFolderJigsawDataset(
             root=Path(self.data_dir, self.train_dir),
@@ -169,7 +171,7 @@ class JigsawAudioDataModule(LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             shuffle=True,
-            collate_fn=siamese_collate
+            collate_fn=siamese_collate,
         )
 
     def val_dataloader(self):
@@ -179,7 +181,7 @@ class JigsawAudioDataModule(LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             shuffle=False,
-            collate_fn=siamese_collate
+            collate_fn=siamese_collate,
         )
 
     def test_dataloader(self):
@@ -189,5 +191,5 @@ class JigsawAudioDataModule(LightningDataModule):
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
             shuffle=False,
-            collate_fn=siamese_collate
+            collate_fn=siamese_collate,
         )

@@ -17,22 +17,33 @@ from typing import List, Tuple, Union
 class TimePatcher(object):
     """Sample patches over last axis of 3d Tensor"""
 
-    def __init__(self, patch_len=36, nb_patches=5, patch_jitter_min=5):
+    def __init__(self, patch_len=36, nb_patches=5, patch_jitter_min=-1, patch_jitter_max=0):
         self.patch_len = patch_len
         self.nb_patches = nb_patches
         self.patch_jitter_min = patch_jitter_min
+        self.patch_jitter_max = patch_jitter_max
 
     def __call__(self, x: torch.Tensor) -> List[torch.Tensor]:
         x = torch.atleast_3d(x)
-        patch_jitter_max = (
-            x.shape[1] - (self.nb_patches // self.patch_len)
-        ) // self.nb_patches
-        jitter = np.random.randint(
-            self.patch_jitter_min, patch_jitter_max, (self.nb_patches,)
-        )
+
+        if self.patch_jitter_min >= 0:
+            if self.patch_jitter_max == 0:
+                patch_jitter_max = (
+                    x.shape[2] - (self.nb_patches * self.patch_len)
+                ) // self.nb_patches
+            else:
+                patch_jitter_max = self.patch_jitter_max
+
+            jitter = np.random.randint(
+                self.patch_jitter_min, patch_jitter_max, (self.nb_patches,)
+            )
+        else:
+            jitter = (0,) * self.nb_patches
+
         patches = []
+        offset = 0
         for i in range(self.nb_patches):
-            offset = i * self.patch_len
+            offset += i * self.patch_len
             patch = x[..., offset + jitter[i] : offset + self.patch_len + jitter[i]]
             patches.append(np.copy(patch))
 
@@ -56,6 +67,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         f_max: int = 16000,
         n_mels: int = 256,
         patch_jitter_min: int = 5,
+        patch_jitter_max: int = 0,
     ):
         self.root = root
 
@@ -68,6 +80,9 @@ class AudioFolderJigsawDataset(data.Dataset):
         self.nb_patches = nb_patches
         self.patch_len = patch_len
         self.patch_jitter_min = patch_jitter_min
+        self.patch_jitter_max = patch_jitter_max
+
+
         if transform is None:
             self.transform = transforms.Compose(
                 [
@@ -83,6 +98,7 @@ class AudioFolderJigsawDataset(data.Dataset):
                         patch_len=self.patch_len,
                         nb_patches=self.nb_patches,
                         patch_jitter_min=self.patch_jitter_min,
+                        patch_jitter_max=self.patch_jitter_max,
                     ),
                 ]
             )
@@ -199,11 +215,20 @@ if __name__ == "__main__":
     import argparse
     import os
     import sys
+    import matplotlib.pyplot as plt
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=str, default="data/", help="root directory")
     args = parser.parse_args()
 
-    data = AudioFolderJigsawDataset(args.root)
-    for audio in data:
-        print(audio["data"].shape)
+    data = AudioFolderJigsawDataset(args.root, patch_jitter_min=-1)
+    for idx, audio in enumerate(data):
+        x = audio["data"].numpy()
+        perm = data.permutations[int(audio["label"])]
+        print(x.shape)
+        fig, axs = plt.subplots(nrows=1, ncols=x.shape[0], constrained_layout=True)
+        for i, ax in enumerate(axs):
+            ax.imshow(x[i, 0, ...], interpolation="none", cmap='viridis')
+            plt.tight_layout()
+            ax.set_title(str(perm[i]))
+        plt.savefig(f"/home/1000324719/{idx}.jpg")
