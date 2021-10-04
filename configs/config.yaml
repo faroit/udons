@@ -6,8 +6,8 @@ defaults:
   - trainer: default.yaml
   - model: jigsaw_model.yaml
   - datamodule: jigsawaudio_datamodule.yaml
-  - callbacks: wandb.yaml # set this to null if you don't want to use callbacks
-  - logger: wandb.yaml # set logger here or use command line (e.g. `python run.py logger=wandb`)
+  - callbacks: default.yaml # set this to null if you don't want to use callbacks
+  - logger: tensorboard.yaml # set logger here or use command line (e.g. `python run.py logger=wandb`)
 
   - mode: default.yaml
 
