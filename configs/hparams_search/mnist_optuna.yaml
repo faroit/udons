@@ -18,13 +18,13 @@ hydra:
     _target_: hydra_plugins.hydra_optuna_sweeper.optuna_sweeper.OptunaSweeper
     storage: null
     study_name: null
-    n_jobs: 1
+    n_jobs: 2
 
     # 'minimize' or 'maximize' the objective
     direction: maximize
 
     # number of experiments that will be executed
-    n_trials: 20
+    n_trials: 30
 
     # choose Optuna hyperparameter sampler
     # learn more here: https://optuna.readthedocs.io/en/stable/reference/samplers.html
@@ -45,16 +45,13 @@ hydra:
       datamodule.batch_size:
         type: categorical
         choices: [32, 64, 128]
+      datamodule.patch_len:
+        type: categorical
+        choices: [32, 64]
+      datamodule.patch_jitter_min:
+        type: categorical
+        choices: [-1, 0]
       model.lr:
         type: float
         low: 0.0001
         high: 0.2
-      model.lin1_size:
-        type: categorical
-        choices: [32, 64, 128, 256, 512]
-      model.lin2_size:
-        type: categorical
-        choices: [32, 64, 128, 256, 512]
-      model.lin3_size:
-        type: categorical
-        choices: [32, 64, 128, 256, 512]

@@ -9,8 +9,8 @@ from torchmetrics.classification.accuracy import Accuracy
 class JigsawModel(LightningModule):
     def __init__(
         self,
-        nb_patches: int = 3,
-        nb_classes: int = 6,
+        nb_patches: int = 5,
+        nb_classes: int = 120,
         nb_channels: int = 1,
         lr: float = 0.001,
         weight_decay: float = 0.0005,

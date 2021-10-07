@@ -6,6 +6,7 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
 from src.datamodules.datasets.jigsawaudio_dataset import AudioFolderJigsawDataset
+from omegaconf import OmegaConf
 
 
 def siamese_collate(batch):
@@ -85,8 +86,9 @@ class JigsawAudioDataModule(LightningDataModule):
         sample_rate: float = 44100.0,
         nb_timesteps: int = 44100 * 5,
         nb_channels: int = 1,
-        patch_len: int = 36,
+        patch_len: int = 32,
         nb_patches: int = 5,
+        nb_classes: int = 120,
         n_fft: int = 2048,
         hop_length: int = 512,
         f_min: float = 27.5,
@@ -110,6 +112,7 @@ class JigsawAudioDataModule(LightningDataModule):
         self.nb_timesteps = nb_timesteps
         self.patch_len = patch_len
         self.nb_patches = nb_patches
+        self.nb_classes = nb_classes
         self.n_fft = n_fft
         self.hop_length = hop_length
         self.f_min = f_min
@@ -124,6 +127,12 @@ class JigsawAudioDataModule(LightningDataModule):
 
         # self.dims is returned when you call datamodule.size()
         self.dims = None
+        resolver_name = "datamodule"
+        OmegaConf.register_new_resolver(
+            resolver_name,
+            lambda name: getattr(self, name),
+            use_cache=False
+        )
 
     def prepare_data(self):
         """Download data if needed. This method is called only from a single GPU.

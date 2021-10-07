@@ -8,7 +8,7 @@ defaults:
   - override /model: jigsaw_model.yaml
   - override /datamodule: jigsawaudio_datamodule.yaml
   - override /callbacks: default.yaml
-  - override /logger: null
+  - override /logger: tensorboard.yaml
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -18,20 +18,19 @@ seed: 12345
 trainer:
   min_epochs: 1
   max_epochs: 1000
-  gradient_clip_val: 0.5
 
 model:
-  lr: 0.0001
-  nb_patches: 4  # TODO: get these from data hparams
-  nb_classes: 24
-  nb_channels: 1
+  lr: 0.1
 
 datamodule:
   train_dir: clean_trainset_28spk_16k_wav
   valid_dir: clean_testset_16k_wav
   test_dir: clean_testset_16k_wav
   batch_size: 64
-  nb_patches: 4  # TODO: get these from data hparams
+  nb_patches: 5
+  nb_classes: 120
+  nb_channels: 1
+  nb_timesteps: 48000  # chunk lenght in samples
   num_workers: 32
   patch_len: 32
   n_fft: 400
@@ -40,7 +39,5 @@ datamodule:
   f_min: 27.5
   f_max: 16000
   sample_rate: 16000
-  nb_timesteps: 48000  # chunk lenght in samples
-  nb_channels: 1 # TODOL get from data hparams
-  patch_jitter_min: 3
-  patch_jitter_max: 12
+  patch_jitter_min: -1
+  patch_jitter_max: 0

@@ -7,8 +7,9 @@ defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
   - override /model: jigsaw_model.yaml
   - override /datamodule: jigsawaudio_datamodule.yaml
-  - override /callbacks: wandb.yaml
-  - override /logger: wandb.yaml
+  - override /callbacks: default.yaml
+  - override /logger: tensorboard.yaml
+  - override /hydra/sweeper: optuna
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -18,20 +19,19 @@ seed: 12345
 trainer:
   min_epochs: 1
   max_epochs: 1000
-  gradient_clip_val: 0.5
 
 model:
-  lr: 0.001
-  nb_patches: 3  # TODO: get these from data hparams
-  nb_classes: 6
-  nb_channels: 1
+  lr: 0.1
 
 datamodule:
   train_dir: train-clean-360
   valid_dir: dev-clean
   test_dir: test-clean
   batch_size: 64
-  nb_patches: 3  # TODO: get these from data hparams
+  nb_patches: 5
+  nb_classes: 120
+  nb_channels: 1
+  nb_timesteps: 48000  # chunk lenght in samples
   num_workers: 32
   patch_len: 32
   n_fft: 400
@@ -40,7 +40,5 @@ datamodule:
   f_min: 27.5
   f_max: 16000
   sample_rate: 16000
-  nb_timesteps: 48000  # chunk lenght in samples
-  nb_channels: 1 # TODOL get from data hparams
   patch_jitter_min: -1
   patch_jitter_max: 0
