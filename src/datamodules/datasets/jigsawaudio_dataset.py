@@ -43,8 +43,8 @@ class TimePatcher(object):
         patches = []
         offset = 0
         for i in range(self.nb_patches):
-            offset += i * self.patch_len
             patch = x[..., offset + jitter[i] : offset + self.patch_len + jitter[i]]
+            offset += self.patch_len +  jitter[i]
             patches.append(np.copy(patch))
 
         return patches
@@ -221,14 +221,15 @@ if __name__ == "__main__":
     parser.add_argument("--root", type=str, default="data/", help="root directory")
     args = parser.parse_args()
 
-    data = AudioFolderJigsawDataset(args.root, patch_jitter_min=-1)
+    data = AudioFolderJigsawDataset(args.root, patch_jitter_min=-1, sample_rate=16000)
     for idx, audio in enumerate(data):
         x = audio["data"].numpy()
         perm = data.permutations[int(audio["label"])]
         print(x.shape)
         fig, axs = plt.subplots(nrows=1, ncols=x.shape[0], constrained_layout=True)
-        for i, ax in enumerate(axs):
-            ax.imshow(x[i, 0, ...], interpolation="none", cmap='viridis')
+        for i in perm:
+            axs[i].imshow(np.log(x[i, 0, ...] + 1), interpolation="none", cmap='viridis')
             plt.tight_layout()
-            ax.set_title(str(perm[i]))
+            axs[i].axis('off')
+            axs[i].set_title(str(i))
         plt.savefig(f"/home/1000324719/{idx}.jpg")
