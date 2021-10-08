@@ -1,4 +1,4 @@
-from src.models.modules.audiojigsaw_net import AlexNetJigsaw
+from src.models.modules.audiojigsaw_net import LSTMJigsaw
 from typing import Any, List
 
 import torch
@@ -12,6 +12,9 @@ class JigsawModel(LightningModule):
         nb_patches: int = 5,
         nb_classes: int = 120,
         nb_channels: int = 1,
+        nb_layers: int = 1,
+        n_mels: int = 256,
+        hidden_size: int = 256,
         lr: float = 0.001,
         weight_decay: float = 0.0005,
     ):
@@ -20,8 +23,7 @@ class JigsawModel(LightningModule):
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
-        print(self.hparams)
-        self.model = AlexNetJigsaw(hparams=self.hparams)
+        self.model = LSTMJigsaw(hparams=self.hparams)
 
         # loss function
         self.criterion = torch.nn.CrossEntropyLoss()
@@ -92,6 +94,6 @@ class JigsawModel(LightningModule):
         See examples here:
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        return torch.optim.Adam(
-            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+        return torch.optim.SGD(
+            params=self.parameters(), lr=self.hparams.lr, nesterov=True, momentum=0.9, weight_decay=self.hparams.weight_decay
         )

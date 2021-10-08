@@ -21,19 +21,20 @@ trainer:
   max_epochs: 1000
 
 model:
-  lr: 0.1
+  lr: 0.0001
+  hidden_size: 128
 
 datamodule:
   train_dir: train-clean-360
   valid_dir: dev-clean
   test_dir: test-clean
   batch_size: 64
-  nb_patches: 5
-  nb_classes: 120
+  nb_patches: 4
+  nb_classes: 24
   nb_channels: 1
   nb_timesteps: 48000  # chunk lenght in samples
+  patch_len: 64
   num_workers: 32
-  patch_len: 32
   n_fft: 400
   hop_length: 100
   n_mels: 128

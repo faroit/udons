@@ -20,7 +20,8 @@ trainer:
   max_epochs: 1000
 
 model:
-  lr: 0.1
+  lr: 0.001
+  hidden_size: 128
 
 datamodule:
   train_dir: clean_trainset_28spk_16k_wav
