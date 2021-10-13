@@ -1,4 +1,4 @@
-_target_: src.models.jigsaw_model.JigsawModel
+_target_: src.models.jigsaw_alexnet_model.JigsawAlexnetModel
 
 lr: 0.001
 weight_decay: 0.0005

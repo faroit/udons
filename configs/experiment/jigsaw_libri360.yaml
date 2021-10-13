@@ -5,7 +5,7 @@
 
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
-  - override /model: jigsaw_model.yaml
+  - override /model: jigsaw_lstm_model.yaml
   - override /datamodule: jigsawaudio_datamodule.yaml
   - override /callbacks: default.yaml
   - override /logger: tensorboard.yaml
@@ -33,7 +33,7 @@ datamodule:
   nb_classes: 24
   nb_channels: 1
   nb_timesteps: 48000  # chunk lenght in samples
-  patch_len: 64
+  patch_len: 8
   num_workers: 32
   n_fft: 400
   hop_length: 100

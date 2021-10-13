@@ -1,4 +1,4 @@
-from src.models.modules.audiojigsaw_net import LSTMJigsaw
+from src.models.modules.audiojigsaw_net import AlexNetJigsaw
 from typing import Any, List
 
 import torch
@@ -6,13 +6,12 @@ from pytorch_lightning import LightningModule
 from torchmetrics.classification.accuracy import Accuracy
 
 
-class JigsawModel(LightningModule):
+class JigsawAlexnetModel(LightningModule):
     def __init__(
         self,
         nb_patches: int = 5,
         nb_classes: int = 120,
         nb_channels: int = 1,
-        nb_layers: int = 1,
         n_mels: int = 256,
         hidden_size: int = 256,
         lr: float = 0.001,
@@ -23,7 +22,7 @@ class JigsawModel(LightningModule):
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
-        self.model = LSTMJigsaw(hparams=self.hparams)
+        self.model = AlexNetJigsaw(hparams=self.hparams)
 
         # loss function
         self.criterion = torch.nn.CrossEntropyLoss()
