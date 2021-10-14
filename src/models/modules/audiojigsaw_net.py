@@ -58,7 +58,7 @@ from torch.nn import LSTM, BatchNorm1d, Linear
 class LSTMJigsaw(nn.Module):
     def __init__(self, hparams: dict):
         super(LSTMJigsaw, self).__init__()
-
+        print(hparams["dims"])
         self.hidden_size = hparams['hidden_size']
         self.fc1 = Linear(hparams['n_mels'], self.hidden_size)
 

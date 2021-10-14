@@ -5,7 +5,7 @@
 
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
-  - override /model: jigsaw_lstm_model.yaml
+  - override /model: jigsaw_transformer_model.yaml
   - override /datamodule: jigsawaudio_datamodule.yaml
   - override /callbacks: default.yaml
   - override /logger: tensorboard.yaml
@@ -22,7 +22,6 @@ trainer:
 
 model:
   lr: 0.0001
-  hidden_size: 128
 
 datamodule:
   train_dir: train-clean-360
