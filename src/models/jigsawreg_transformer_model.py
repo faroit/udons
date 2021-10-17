@@ -1,4 +1,4 @@
-from src.models.modules.audiojigsaw_net import AlexNetJigsaw
+from src.models.modules.vit_encoder import SpecTransformer
 from typing import Any, List
 
 import itertools
@@ -9,14 +9,22 @@ from torchmetrics.classification.accuracy import Accuracy
 from einops.layers.torch import Rearrange
 
 
-class JigsawRegAlexnetModel(LightningModule):
+class JigsawRegTransformerModel(LightningModule):
     def __init__(
         self,
-        nb_patches: int = 5,
         nb_classes: int = 120,
         nb_channels: int = 1,
+        nb_patches: int = 5,
         n_mels: int = 256,
-        hidden_size: int = 256,
+        patch_len: int = 32,
+        depth: int = 3,
+        heads: int = 3,
+        pool = 'cls',
+        dim_head = 64,
+        model_dim = 1024,
+        mlp_dim = 512,
+        dropout = 0.,
+        emb_dropout = 0.,
         lr: float = 0.001,
         weight_decay: float = 0.0005,
     ):
@@ -25,7 +33,7 @@ class JigsawRegAlexnetModel(LightningModule):
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
-        self.model = AlexNetJigsaw(hparams=self.hparams)
+        self.model = SpecTransformer(hparams=self.hparams)
         self.unpatch = Rearrange('(b p) 1 f t -> b p f t', p=self.hparams["nb_patches"])
         self.permutations = torch.tensor(
             np.array(
@@ -129,9 +137,5 @@ class JigsawRegAlexnetModel(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         return torch.optim.SGD(
-            params=self.parameters(),
-            lr=self.hparams.lr,
-            nesterov=True,
-            momentum=0.9,
-            weight_decay=self.hparams.weight_decay,
+            params=self.parameters(), lr=self.hparams.lr, nesterov=True, momentum=0.9, weight_decay=self.hparams.weight_decay
         )
