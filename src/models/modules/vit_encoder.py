@@ -87,7 +87,7 @@ class SpecTransformer(nn.Module):
         self.hparams = hparams
         self.unpatch = utils.SiameseConcatView(hparams["nb_patches"])
         self.patch_encoding = nn.Sequential(
-            Rearrange('(b p) 1 f t -> b p (f t)', p=hparams["nb_patches"]),
+            Rearrange('(b p) c f t -> b p (c f t)', p=hparams["nb_patches"]),
             nn.Linear(hparams["patch_len"] * hparams["n_mels"], dim)
         )
 
