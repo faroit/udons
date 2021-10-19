@@ -136,6 +136,6 @@ class JigsawRegTransformerModel(LightningModule):
         See examples here:
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        return torch.optim.SGD(
-            params=self.parameters(), lr=self.hparams.lr, nesterov=True, momentum=0.9, weight_decay=self.hparams.weight_decay
+        return torch.optim.Adam(
+            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
         )
