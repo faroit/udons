@@ -10,6 +10,8 @@ from einops.layers.torch import Rearrange
 
 
 class JigsawRegTransformerModel(LightningModule):
+    """Transformer Model that predicts the classification task but applies it via soft-indexing to the original input"""
+
     def __init__(
         self,
         nb_classes: int = 120,
@@ -19,12 +21,12 @@ class JigsawRegTransformerModel(LightningModule):
         patch_len: int = 32,
         depth: int = 3,
         heads: int = 3,
-        pool = 'cls',
-        dim_head = 64,
-        model_dim = 1024,
-        mlp_dim = 512,
-        dropout = 0.,
-        emb_dropout = 0.,
+        pool="cls",
+        dim_head=64,
+        model_dim=1024,
+        mlp_dim=512,
+        dropout=0.0,
+        emb_dropout=0.0,
         lr: float = 0.001,
         weight_decay: float = 0.0005,
     ):
@@ -34,7 +36,7 @@ class JigsawRegTransformerModel(LightningModule):
         # it also allows to access params with 'self.hparams' attribute
         self.save_hyperparameters()
         self.model = SpecTransformer(hparams=self.hparams)
-        self.unpatch = Rearrange('(b p) 1 f t -> b p f t', p=self.hparams["nb_patches"])
+        self.unpatch = Rearrange("(b p) 1 f t -> b p f t", p=self.hparams["nb_patches"])
         self.permutations = torch.tensor(
             np.array(
                 list(itertools.permutations(list(range(self.hparams["nb_patches"]))))
@@ -59,17 +61,20 @@ class JigsawRegTransformerModel(LightningModule):
         return self.model(x)
 
     def step(self, batch: Any):
-        x, y = batch
+        x, permutation = batch
         logits = self.forward(x)
-        preds = torch.argmax(logits, dim=1)
 
         # get unshuffled x
+        unpatched_x = self.unpatch(x)
         softmaxed = torch.softmax(logits, -1)
-        unpatched_x = self.unpatch(x)      
-        unshuffled_x = torch.sum(softmaxed[:, torch.arange(len(self.permutations)), None, None, None] * unpatched_x[:, self.permutations], 1)
-        # TODO: apply in the patch-encoded domain
-        loss = self.criterion(unshuffled_x, unpatched_x)
-        return loss, logits, y
+        unshuffled_x = torch.sum(
+            softmaxed[:, torch.arange(len(self.permutations)), None, None, None]
+            * unpatched_x[:, self.permutations],
+            1,
+        )
+        ordered_x = unpatched_x[torch.arange(unpatched_x.shape[0])[:, None], self.permutations[permutation], ...]
+        loss = self.criterion(unshuffled_x, ordered_x)
+        return loss, logits, permutation
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, logits, targets = self.step(batch)
@@ -137,5 +142,7 @@ class JigsawRegTransformerModel(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         return torch.optim.Adam(
-            params=self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay
+            params=self.parameters(),
+            lr=self.hparams.lr,
+            weight_decay=self.hparams.weight_decay,
         )
