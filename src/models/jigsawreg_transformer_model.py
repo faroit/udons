@@ -62,10 +62,11 @@ class JigsawRegTransformerModel(LightningModule):
 
     def step(self, batch: Any):
         x, permutation = batch
+        unpatched_x = self.unpatch(x)
+
         logits = self.forward(x)
 
         # get unshuffled x
-        unpatched_x = self.unpatch(x)
         softmaxed = torch.softmax(logits, -1)
         unshuffled_x = torch.sum(
             softmaxed[:, torch.arange(len(self.permutations)), None, None, None]
