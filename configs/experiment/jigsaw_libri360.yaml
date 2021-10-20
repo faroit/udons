@@ -19,9 +19,11 @@ seed: 12345
 trainer:
   min_epochs: 1
   max_epochs: 1000
+  gpus: [2]
 
 model:
   lr: 0.001
+  pos_embed: false
 
 datamodule:
   train_dir: train-clean-360
