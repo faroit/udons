@@ -85,7 +85,7 @@ class SpecTransformer(nn.Module):
 
         dim = hparams["model_dim"]
         self.hparams = hparams
-        self.unpatch = utils.SiameseConcatView(hparams["nb_patches"])
+
         self.patch_encoding = nn.Sequential(
             Rearrange('(b p) c f t -> b p (c f) t', p=hparams["nb_patches"]),
             torch.nn.InstanceNorm2d(hparams["nb_patches"], affine=False),
@@ -110,7 +110,7 @@ class SpecTransformer(nn.Module):
     def forward(self, x):
         # get do not apply siamese view for this model
         x = self.patch_encoding(x)
-        # import ipdb; ipdb.set_trace()
+
         b, n, _ = x.shape
 
         cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = b)
