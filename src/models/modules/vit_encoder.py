@@ -86,12 +86,18 @@ class SpecTransformer(nn.Module):
         dim = hparams["model_dim"]
         self.hparams = hparams
 
-        self.patch_encoding = nn.Sequential(
-            Rearrange('(b p) c f t -> b p (c f) t', p=hparams["nb_patches"]),
-            torch.nn.InstanceNorm2d(hparams["nb_patches"], affine=False),
-            Rearrange('b p (c f) t -> b p (c f t)', c=hparams["nb_channels"]),
-            nn.Linear(hparams["patch_len"] * hparams["n_mels"], dim)
-        )
+        patch_modules = []
+        if hparams["instance_norm"]:
+            patch_modules.append(Rearrange('(b p) c f t -> b p (c f) t', p=hparams["nb_patches"]))
+            patch_modules.append(torch.nn.InstanceNorm2d(hparams["nb_patches"], affine=False))
+            patch_modules.append(Rearrange('b p (c f) t -> b p (c f t)', c=hparams["nb_channels"]))
+        else:
+            patch_modules.append(Rearrange('(b p) c f t -> b p (c f t)', p=hparams["nb_patches"]))
+
+        # add mlp encoding
+        patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], dim))
+
+        self.patch_encoding = nn.Sequential(*patch_modules)
 
         self.pos_embedding = nn.Parameter(torch.randn(1, hparams["nb_patches"] + 1, dim))
         self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
