@@ -8,8 +8,8 @@ nb_channels: '${datamodule: nb_channels}'
 n_mels: '${datamodule: n_mels}'
 patch_len: '${datamodule: patch_len}'
 model_dim: 768
-depth: 12
-heads: 12
+depth: 3
+heads: 3
 mlp_dim: 3072
 pool: "cls"
 dim_head: 64
@@ -17,3 +17,4 @@ dropout: 0.0
 emb_dropout: 0.0
 pos_embed: false
 instance_norm: false
+patch_encoder: linear

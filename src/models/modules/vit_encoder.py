@@ -90,12 +90,37 @@ class SpecTransformer(nn.Module):
         if hparams["instance_norm"]:
             patch_modules.append(Rearrange('(b p) c f t -> b p (c f) t', p=hparams["nb_patches"]))
             patch_modules.append(torch.nn.InstanceNorm2d(hparams["nb_patches"], affine=False))
-            patch_modules.append(Rearrange('b p (c f) t -> b p (c f t)', c=hparams["nb_channels"]))
-        else:
-            patch_modules.append(Rearrange('(b p) c f t -> b p (c f t)', p=hparams["nb_patches"]))
+            # todo make this generic to have a conv2d encoder
+            patch_modules.append(Rearrange('b p (c f) t -> (b p) c f t', c=hparams["nb_channels"]))           
 
-        # add mlp encoding
-        patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], dim))
+        if hparams["patch_encoder"] == "linear":
+            patch_modules.append(Rearrange('(b p) c f t -> b p (c f t)', p=hparams["nb_patches"]))
+            patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], dim))
+        elif hparams["patch_encoder"] == "conv":
+            patch_modules.append(
+                nn.Sequential(
+                    nn.Conv2d(hparams["nb_channels"], 64, kernel_size=7, stride=2, padding=2),
+                    nn.ReLU(inplace=True),
+                    nn.MaxPool2d(kernel_size=3, stride=2),
+                    nn.Conv2d(64, 192, kernel_size=5, padding=2),
+                    nn.ReLU(inplace=True),
+                    nn.MaxPool2d(kernel_size=3, stride=2),
+                    nn.Conv2d(192, 384, kernel_size=3, padding=1),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(384, 256, kernel_size=3, padding=1),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(256, 256, kernel_size=3, padding=1),
+                    nn.ReLU(inplace=True),
+                    nn.MaxPool2d(kernel_size=3, stride=2),
+                    nn.AdaptiveAvgPool2d((6, 6)),
+                    nn.Flatten(1),
+                    nn.Dropout(),
+                    nn.Linear(256 * 6 * 6, 512),
+                    nn.ReLU(inplace=True),
+                    nn.Linear(512, dim),
+                    Rearrange('(b p) d -> b p d', p=hparams["nb_patches"])
+                )
+            )
 
         self.patch_encoding = nn.Sequential(*patch_modules)
 
