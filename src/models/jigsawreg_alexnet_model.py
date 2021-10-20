@@ -51,17 +51,21 @@ class JigsawRegAlexnetModel(LightningModule):
         return self.model(x)
 
     def step(self, batch: Any):
-        x, y = batch
+        x, permutation = batch
+        unpatched_x = self.unpatch(x)
+
         logits = self.forward(x)
-        preds = torch.argmax(logits, dim=1)
 
         # get unshuffled x
         softmaxed = torch.softmax(logits, -1)
-        unpatched_x = self.unpatch(x)      
-        unshuffled_x = torch.sum(softmaxed[:, torch.arange(len(self.permutations)), None, None, None] * unpatched_x[:, self.permutations], 1)
-        # TODO: apply in the patch-encoded domain
-        loss = self.criterion(unshuffled_x, unpatched_x)
-        return loss, logits, y
+        unshuffled_x = torch.sum(
+            softmaxed[:, torch.arange(len(self.permutations)), None, None, None]
+            * unpatched_x[:, self.permutations],
+            1,
+        )
+        ordered_x = unpatched_x[torch.arange(unpatched_x.shape[0])[:, None], self.permutations[permutation], ...]
+        loss = self.criterion(unshuffled_x, ordered_x)
+        return loss, logits, permutation
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, logits, targets = self.step(batch)
