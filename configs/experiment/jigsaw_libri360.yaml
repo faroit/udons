@@ -22,13 +22,13 @@ trainer:
   gpus: [2]
 
 model:
-  lr: 0.01
+  lr: 0.001
   pos_embed: true
   instance_norm: false
   depth: 3
   heads: 3
-  mlp_dim: 3072
-  patch_encoder: linear
+  mlp_dim: 768
+  patch_encoder: conv
 
 datamodule:
   train_dir: train-clean-360
@@ -39,7 +39,7 @@ datamodule:
   nb_classes: 120
   nb_channels: 1
   nb_timesteps: 48000  # chunk lenght in samples
-  patch_len: 32
+  patch_len: 16
   num_workers: 32
   n_fft: 400
   hop_length: 100

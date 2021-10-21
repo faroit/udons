@@ -10,23 +10,15 @@ class AlexNetJigsaw(nn.Module):
         super(AlexNetJigsaw, self).__init__()
         self.patch_model = nn.Sequential(
             nn.Conv2d(hparams["nb_channels"], 64, kernel_size=7, stride=2, padding=2),
-            nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(64, 192, kernel_size=5, padding=2),
-            nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(192, 384, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
             nn.Conv2d(384, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
             nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2),
-            nn.AdaptiveAvgPool2d((6, 6)),
             nn.Flatten(1),
             nn.Dropout(),
-            nn.Linear(256 * 6 * 6, 512),
-            nn.ReLU(inplace=True),
+            nn.Linear(7936, 512),
         )
         self.unpatch = utils.SiameseConcatView(hparams["nb_patches"])
         self.classifier = nn.Sequential(
