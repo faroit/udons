@@ -5,10 +5,11 @@
 
 defaults:
   - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
-  - override /model: jigsaw_model.yaml
+  - override /model: jigsaw_transformer_model.yaml
   - override /datamodule: jigsawaudio_datamodule.yaml
   - override /callbacks: default.yaml
   - override /logger: tensorboard.yaml
+  - override /hydra/sweeper: optuna
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -18,10 +19,16 @@ seed: 12345
 trainer:
   min_epochs: 1
   max_epochs: 1000
+  gpus: [2]
 
 model:
-  lr: 0.001
-  hidden_size: 128
+  lr: 0.01
+  pos_embed: true
+  instance_norm: false
+  depth: 3
+  heads: 3
+  mlp_dim: 768
+  patch_encoder: conv
 
 datamodule:
   train_dir: clean_trainset_28spk_16k_wav
@@ -32,13 +39,13 @@ datamodule:
   nb_classes: 120
   nb_channels: 1
   nb_timesteps: 48000  # chunk lenght in samples
-  num_workers: 32
   patch_len: 32
+  num_workers: 32
   n_fft: 400
   hop_length: 100
   n_mels: 128
   f_min: 27.5
   f_max: 16000
   sample_rate: 16000
-  patch_jitter_min: -1
-  patch_jitter_max: 0
+  patch_jitter_min: 1
+  patch_jitter_max: 9
