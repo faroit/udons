@@ -10,6 +10,7 @@ from pytorch_lightning import (
     seed_everything,
 )
 from pytorch_lightning.loggers import LightningLoggerBase
+from torch.utils import data
 
 from src.utils import utils
 
@@ -71,6 +72,15 @@ def train(config: DictConfig) -> Optional[float]:
         callbacks=callbacks,
         logger=logger,
     )
+
+    # Run learning rate finder
+    # lr_finder = trainer.tuner.lr_find(model, datamodule=datamodule)
+
+    # # Results can be found in
+    # new_lr = lr_finder.suggestion()
+    # log.info(f"New Learning rate: {new_lr}")
+    # # update hparams of the model
+    # model.hparams.lr = new_lr
 
     # Train the model
     log.info("Starting training!")
