@@ -18,3 +18,4 @@ emb_dropout: 0.0
 pos_embed: false
 instance_norm: false
 patch_encoder: linear
+mlp_layers: 3
