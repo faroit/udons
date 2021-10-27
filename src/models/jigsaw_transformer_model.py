@@ -26,7 +26,8 @@ class JigsawTransformerModel(LightningModule):
         weight_decay: float = 0.0005,
         pos_embed: bool = False,
         instance_norm: bool = False,
-        patch_encoder: str = 'linear'
+        patch_encoder: str = 'linear',
+        mlp_layers: int = 3
     ):
         super().__init__()
 

@@ -95,8 +95,8 @@ class SpecTransformer(nn.Module):
 
         if hparams["patch_encoder"] == "linear":
             patch_modules.append(Rearrange('(b p) c f t -> b p (c f t)', p=hparams["nb_patches"]))
-            patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], hparams["patch_len"] * hparams["n_mels"]))
-            patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], hparams["patch_len"] * hparams["n_mels"]))
+            for i in range(hparams["mlp_layers"]):
+                patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], hparams["patch_len"] * hparams["n_mels"]))
             patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], dim))
         elif hparams["patch_encoder"] == "conv":
             patch_modules.append(
