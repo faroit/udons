@@ -67,12 +67,11 @@ def load_model(model_file_path: str = "") -> torch.nn.Module:
     Returns:
         Model
     """
-    jigsaw_model = JigsawTransformerModel.load_from_checkpoint(checkpoint_path=model_file_path)
-    model = JigSawEmbedder(jigsaw_model.model)
+    lightning_model = JigsawTransformerModel.load_from_checkpoint(checkpoint_path=model_file_path)
+    model = JigSawEmbedder(lightning_model.model)
     model.eval()
     model.sample_rate = 16000  # sample rate
-    model.embedding_size = 768  # model_dim  TODO: get from configs
-
+    model.embedding_size = lightning_model.hparams["model_dim"]  # model_dim  TODO: get from configs
     return model
 
 
@@ -130,7 +129,7 @@ def get_timestamp_embeddings(
             model_input = batch[0][:, None]
             if model_input.shape[0] != BATCH_SIZE * patch_len:
                 remainder = BATCH_SIZE * patch_len - model_input.shape[0]
-                model_input = torch.cat((model_input, torch.zeros(remainder, 1, model_input.shape[2])), dim=0)
+                model_input = torch.cat((model_input, torch.zeros(remainder, 1, model_input.shape[2]).to(audio.device)), dim=0)
             out = model(model_input)
             embeddings_list.append(out)
 
