@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES="2" time python3 -m heareval.embeddings.runner embed --model  logs/runs/2021-10-21/11-53-23/checkpoints/last.ckpt --tasks-dir /disk1/1000324719/hear-2021.0.3/tasks --embeddings-dir /disk1/1000324719/embeddings
