@@ -24,11 +24,12 @@ trainer:
 model:
   lr: 0.001
   pos_embed: true
-  instance_norm: false
+  instance_norm: true
   depth: 3
   heads: 3
   mlp_dim: 768
-  patch_encoder: conv
+  patch_encoder: linear
+  mlp_layers: 1
 
 datamodule:
   train_dir: train-clean-360
