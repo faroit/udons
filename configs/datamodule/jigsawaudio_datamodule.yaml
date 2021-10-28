@@ -2,9 +2,6 @@ _target_: src.datamodules.jigsawaudio_datamodule.JigsawAudioDataModule
 
 data_dir: ${data_dir} # data_dir is specified in config.yaml
 batch_size: 64
-train_dir: "train"
-valid_dir: "valid"
-test_dir: "test" 
 nb_patches: 5
 nb_classes: 120
 nb_channels: 1
