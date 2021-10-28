@@ -56,6 +56,25 @@ def siamese_collate(batch):
     return idx_data, idx_labels
 
 
+class ConcatMinDataset(torch.utils.data.Dataset):
+    def __init__(self, *datasets):
+        self.datasets = datasets
+
+    def __getitem__(self, i):
+        return tuple(d[i] for d in self.datasets)
+
+    def __len__(self):
+        return min(len(d) for d in self.datasets)
+
+class ConcatMaxDataset(torch.utils.data.Dataset):
+    def __init__(self, *datasets: tuple):
+        self.datasets = datasets
+
+    def __getitem__(self, i):
+        return tuple(d[i % len(d)] for d in self.datasets)
+
+    def __len__(self):
+        return max(len(d) for d in self.datasets)
 class JigsawAudioDataModule(LightningDataModule):
     """
     Example of LightningDataModule dataset.
@@ -77,9 +96,7 @@ class JigsawAudioDataModule(LightningDataModule):
     def __init__(
         self,
         data_dir: str = "data/",
-        train_dir: str = "train",
-        test_dir: str = "test",
-        valid_dir: str = "valid",
+        paths: dict = None,
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -100,9 +117,7 @@ class JigsawAudioDataModule(LightningDataModule):
         super().__init__()
 
         self.data_dir = data_dir
-        self.train_dir = train_dir
-        self.valid_dir = valid_dir
-        self.test_dir = test_dir
+        self.paths = paths
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
@@ -155,21 +170,24 @@ class JigsawAudioDataModule(LightningDataModule):
             "patch_jitter_min": self.patch_jitter_min,
             "patch_jitter_max": self.patch_jitter_max,
         }
-        self.train_set = AudioFolderJigsawDataset(
-            root=Path(self.data_dir, self.train_dir),
-            random_chunk_length=self.nb_timesteps,
-            **common_args,
-        )
-        self.test_set = AudioFolderJigsawDataset(
-            root=Path(self.data_dir, self.valid_dir),
-            random_chunk_length=self.nb_timesteps,
-            **common_args,
-        )
-        self.valid_set = AudioFolderJigsawDataset(
-            root=Path(self.data_dir, self.test_dir),
-            random_chunk_length=self.nb_timesteps,
-            **common_args,
-        )
+
+        datasets = {}
+        for dset in ["train", "valid", "test"]:
+            sets = []
+            for path in self.paths:
+                if path.get(f"{dset}_dir"):
+                    sets.append(
+                        AudioFolderJigsawDataset(
+                            root=Path(path["root_dir"], path[f"{dset}_dir"]),
+                            random_chunk_length=self.nb_timesteps,
+                            **common_args
+                        )
+                    )
+            datasets[dset] = torch.utils.data.ConcatDataset(sets)
+
+        self.train_set = datasets["train"]
+        self.valid_set = datasets["valid"]
+        self.test_set = datasets["test"]
 
         self.dims = self.train_set[0]["data"][0].shape
 

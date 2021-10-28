@@ -200,17 +200,6 @@ class AudioFolderJigsawDataset(data.Dataset):
         return {"data": input_data, "label": out_label}
 
 
-class ConcatDataset(data.Dataset):
-    def __init__(self, *datasets: tuple):
-        self.datasets = datasets
-
-    def __getitem__(self, i):
-        return tuple(d[i % len(d)] for d in self.datasets)
-
-    def __len__(self):
-        return max(len(d) for d in self.datasets)
-
-
 if __name__ == "__main__":
     import argparse
     import os
