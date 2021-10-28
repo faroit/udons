@@ -18,24 +18,23 @@ seed: 12345
 
 trainer:
   min_epochs: 1
-  max_epochs: 1000
-  gpus: [2]
+  max_epochs: 5000
+  gpus: [3]
 
 model:
   lr: 0.001
   pos_embed: true
-  instance_norm: true
-  depth: 3
-  heads: 3
-  mlp_dim: 768
+  instance_norm: false
   patch_encoder: linear
-  mlp_layers: 1
+  mlp_layers: 0
 
 datamodule:
-  train_dir: train-clean-360
-  valid_dir: dev-clean
-  test_dir: test-clean
-  batch_size: 64
+  paths: 
+    - root_dir: /disk1/1000324719/librispeech
+      train_dir: train-clean-360
+      valid_dir: dev-clean
+      test_dir: test-clean
+  batch_size: 128
   nb_patches: 5
   nb_classes: 120
   nb_channels: 1
