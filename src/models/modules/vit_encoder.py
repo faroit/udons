@@ -148,3 +148,74 @@ class SpecTransformer(nn.Module):
 
         x = self.to_latent(x)
         return self.mlp_head(x)
+
+
+class SpecKKTransformer(nn.Module):
+    def __init__(self, hparams: dict):
+        super().__init__()
+
+        dim = hparams["model_dim"]
+        self.hparams = hparams
+
+        patch_modules = []
+        if hparams["instance_norm"]:
+            patch_modules.append(Rearrange('(b p) c f t -> b p (c f) t', p=hparams["nb_patches"]))
+            patch_modules.append(torch.nn.InstanceNorm2d(hparams["nb_patches"], affine=False))
+            # todo make this generic to have a conv2d encoder
+            patch_modules.append(Rearrange('b p (c f) t -> (b p) c f t', c=hparams["nb_channels"]))           
+
+        if hparams["patch_encoder"] == "linear":
+            patch_modules.append(Rearrange('(b p) c f t -> b p (c f t)', p=hparams["nb_patches"]))
+            for i in range(hparams["mlp_layers"]):
+                patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], hparams["patch_len"] * hparams["n_mels"]))
+            patch_modules.append(nn.Linear(hparams["patch_len"] * hparams["n_mels"], dim))
+        elif hparams["patch_encoder"] == "conv":
+            patch_modules.append(
+                nn.Sequential(
+                    nn.Conv2d(hparams["nb_channels"], 64, kernel_size=7, stride=2, padding=2),
+                    nn.MaxPool2d(kernel_size=3, stride=2),
+                    nn.Conv2d(64, 192, kernel_size=5, padding=2),
+                    nn.MaxPool2d(kernel_size=3, stride=2),
+                    nn.Conv2d(192, 384, kernel_size=3, padding=1),
+                    nn.Conv2d(384, 256, kernel_size=3, padding=1),
+                    nn.Conv2d(256, 256, kernel_size=3, padding=1),
+                    nn.Flatten(1),
+                    nn.Linear(3840, dim),
+                    Rearrange('(b p) d -> b p d', p=hparams["nb_patches"])
+                )
+            )
+
+        self.patch_encoding = nn.Sequential(*patch_modules)
+
+        self.pos_embedding = nn.Parameter(torch.randn(1, hparams["nb_patches"] + 1, dim))
+        self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
+        self.dropout = nn.Dropout(hparams["emb_dropout"])
+
+        self.transformer = Transformer(dim, hparams["depth"], hparams["heads"], hparams["dim_head"], hparams["mlp_dim"], hparams["dropout"])
+
+        self.pool = hparams["pool"]
+        self.to_latent = nn.Identity()
+
+        self.mlp_head = nn.Sequential(
+            nn.LayerNorm(dim),
+            nn.Linear(dim, hparams["nb_patches"]*hparams["nb_patches"])
+        )
+
+    def forward(self, x):
+        # get do not apply siamese view for this model
+        x = self.patch_encoding(x)
+
+        b, n, _ = x.shape
+
+        cls_tokens = repeat(self.cls_token, '() n d -> b n d', b = b)
+        x = torch.cat((cls_tokens, x), dim=1)
+        if self.hparams["pos_embed"]:
+            x += self.pos_embedding[:, :(n + 1)]
+        x = self.dropout(x)
+
+        x = self.transformer(x)
+
+        x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
+
+        x = self.to_latent(x)
+        return self.mlp_head(x)
