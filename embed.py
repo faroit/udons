@@ -9,7 +9,7 @@ from hearbaseline.util import frame_audio
 
 
 # Number of frames to batch process for timestamp embeddings
-BATCH_SIZE = 5  # = patch size
+BATCH_SIZE = 32  # = patch size
 
 class JigSawEmbedder(torch.nn.Module):
     """
@@ -67,12 +67,11 @@ def load_model(model_file_path: str = "") -> torch.nn.Module:
     Returns:
         Model
     """
-    jigsaw_model = JigsawTransformerModel.load_from_checkpoint(checkpoint_path=model_file_path)
-    model = JigSawEmbedder(jigsaw_model.model)
+    lightning_model = JigsawTransformerModel.load_from_checkpoint(checkpoint_path=model_file_path)
+    model = JigSawEmbedder(lightning_model.model)
     model.eval()
     model.sample_rate = 16000  # sample rate
-    model.embedding_size = 768  # model_dim  TODO: get from configs
-
+    model.embedding_size = lightning_model.hparams["model_dim"]  # model_dim  TODO: get from configs
     return model
 
 
@@ -107,18 +106,16 @@ def get_timestamp_embeddings(
         hop_size=50,
         sample_rate=16000,
     )
-
-    print(frames.shape)
+    patch_len = 5
     audio_batches, num_frames, frame_size = frames.shape
-    import ipdb; ipdb.set_trace()
 
-    frames = frames.flatten(end_dim=1)
+    frames = rearrange(frames, 'b p t -> (b p) t')
 
     # We're using a DataLoader to help with batching of frames
     dataset = torch.utils.data.TensorDataset(frames)
-    # trick here: create patches with batch_size = 1 
+    # trick here: create patches with batch_size = 3
     loader = torch.utils.data.DataLoader(
-        dataset, batch_size=BATCH_SIZE, shuffle=False, drop_last=False
+        dataset, batch_size=BATCH_SIZE * patch_len, shuffle=False, drop_last=False
     )
 
 
@@ -130,17 +127,17 @@ def get_timestamp_embeddings(
     with torch.no_grad():
         for batch in loader:
             model_input = batch[0][:, None]
-            print(model_input.shape)
-            print(model_input.shape[0])
-            if model_input.shape[0] != BATCH_SIZE:
-                remainder = BATCH_SIZE - model_input.shape[0]
-                model_input = torch.cat((model_input, torch.zeros(remainder, 1, model_input.shape[2])), dim=0)
+            if model_input.shape[0] != BATCH_SIZE * patch_len:
+                remainder = BATCH_SIZE * patch_len - model_input.shape[0]
+                model_input = torch.cat((model_input, torch.zeros(remainder, 1, model_input.shape[2]).to(audio.device)), dim=0)
             out = model(model_input)
             embeddings_list.append(out)
 
     # Concatenate mini-batches back together and unflatten the frames
     # to reconstruct the audio batches
-    embeddings = torch.cat(embeddings_list, dim=1)[:, :-remainder]
+    embeddings = torch.cat(embeddings_list, dim=0)
+    embeddings = rearrange(embeddings, 'b p f -> (b p) f')
+    embeddings = embeddings[:-remainder].unflatten(0, (audio_batches, num_frames))
 
     return embeddings, timestamps
 
@@ -173,4 +170,5 @@ if __name__ == "__main__":
     parser.add_argument("model_path", type=str, help="model directory")
     args = parser.parse_args()
     model = load_model(args.model_path)
-    get_timestamp_embeddings(torch.rand(8, 44100), model)
+    x, _ = get_timestamp_embeddings(torch.rand(21, 4041000), model)
+    print(x.shape)
