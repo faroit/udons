@@ -68,6 +68,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         n_mels: int = 256,
         patch_jitter_min: int = 5,
         patch_jitter_max: int = 0,
+        oversample_factor: int = 1
     ):
         self.root = root
 
@@ -81,7 +82,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         self.patch_len = patch_len
         self.patch_jitter_min = patch_jitter_min
         self.patch_jitter_max = patch_jitter_max
-
+        self.oversample_factor = oversample_factor
 
         if transform is None:
             self.transform = transforms.Compose(
@@ -116,6 +117,7 @@ class AudioFolderJigsawDataset(data.Dataset):
             Tuple(torch.Tensor, torch.long): Tuple of audio data and label. Label is the index of the permutation array.
                 The audio data is a tensor of shape (nb_patches, nb_channels, nb_mels, nb_frames)
         """
+        index = index // self.oversample_factor
         info = self.audio_data[index]["metadata"]
         if self.random_chunk_length is not None:
             total_samples = info["samples"]
@@ -143,7 +145,7 @@ class AudioFolderJigsawDataset(data.Dataset):
         return self.shuffle_and_get_label(audio, self.permutations)
 
     def __len__(self) -> int:
-        return len(self.audio_data)
+        return len(self.audio_data) * self.oversample_factor
 
     def transform_audio(self, audio: torch.Tensor) -> torch.Tensor:
         if self.transform is not None:

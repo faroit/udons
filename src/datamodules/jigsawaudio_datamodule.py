@@ -180,6 +180,7 @@ class JigsawAudioDataModule(LightningDataModule):
                         AudioFolderJigsawDataset(
                             root=Path(path["root_dir"], path[f"{dset}_dir"]),
                             random_chunk_length=self.nb_timesteps,
+                            oversample_factor=path["oversample_factor"],
                             **common_args
                         )
                     )
