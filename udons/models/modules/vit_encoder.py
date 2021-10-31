@@ -1,3 +1,5 @@
+"""vision transformer adopted from https://github.com/lucidrains/vit-pytorch/tree/main/vit_pytorch"""
+
 from torch import nn
 import numpy as np
 from einops.layers.torch import Rearrange
