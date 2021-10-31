@@ -1,4 +1,4 @@
-from src.models.modules.vit_encoder import SpecTransformer
+from udons.models.modules.vit_encoder import SpecTransformer
 from typing import Any, List
 
 import torch

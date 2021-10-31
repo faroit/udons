@@ -1,12 +1,12 @@
-_target_: src.models.shuffle_transformer_model.ShuffleTransformerModel
+_target_: udons.models.shuffle_transformer_model.ShuffleTransformerModel
 
 lr: 0.0001
 weight_decay: 0.0000
-nb_classes: '${datamodule: nb_classes}'
-nb_patches: '${datamodule: nb_patches}'
-nb_channels: '${datamodule: nb_channels}'
-n_mels: '${datamodule: n_mels}'
-patch_len: '${datamodule: patch_len}'
+nb_classes: "${datamodule: nb_classes}"
+nb_patches: "${datamodule: nb_patches}"
+nb_channels: "${datamodule: nb_channels}"
+n_mels: "${datamodule: n_mels}"
+patch_len: "${datamodule: patch_len}"
 model_dim: 1024
 depth: 3
 heads: 3

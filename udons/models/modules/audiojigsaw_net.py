@@ -2,7 +2,7 @@ import pathlib
 from torch import nn
 import torch
 from einops import rearrange
-from src.models.modules import utils
+from udons.models.modules import utils
 
 
 class AlexNetJigsaw(nn.Module):

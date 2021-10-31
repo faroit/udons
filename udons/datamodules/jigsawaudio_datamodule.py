@@ -5,7 +5,7 @@ import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
-from src.datamodules.datasets.jigsawaudio_dataset import AudioFolderJigsawDataset
+from udons.datamodules.datasets.jigsawaudio_dataset import AudioFolderJigsawDataset
 from omegaconf import OmegaConf
 
 

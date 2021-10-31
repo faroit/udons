@@ -7,7 +7,7 @@ from torch import nn
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
-from src.models.modules import utils
+from udons.models.modules import utils
 
 
 def pair(t):

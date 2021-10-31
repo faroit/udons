@@ -1,4 +1,4 @@
-_target_: src.datamodules.jigsawaudio_datamodule.JigsawAudioDataModule
+_target_: udons.datamodules.jigsawaudio_datamodule.JigsawAudioDataModule
 
 data_dir: ${data_dir} # data_dir is specified in config.yaml
 batch_size: 64
@@ -8,8 +8,8 @@ nb_channels: 1
 num_workers: 0
 pin_memory: False
 sample_rate: 44100
-nb_timesteps: 220500  # chunk lenght in samples
-patch_len: 32  # patch len in Frames
+nb_timesteps: 220500 # chunk lenght in samples
+patch_len: 32 # patch len in Frames
 n_fft: 2048
 hop_length: 512
 n_mels: 256

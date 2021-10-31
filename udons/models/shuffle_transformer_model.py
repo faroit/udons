@@ -1,4 +1,4 @@
-from src.models.modules.shuffle_transformer import ShuffleTransformer
+from udons.models.modules.shuffle_transformer import ShuffleTransformer
 from typing import Any, List
 
 import itertools

@@ -1,11 +1,10 @@
-from re import X
-from src.models.jigsaw_transformer_model import JigsawTransformerModel
+from udons.models.jigsaw_transformer_model import JigsawTransformerModel
+from udons.hearutils import frame_audio
 from einops.layers.torch import Rearrange
 from einops import rearrange, repeat
 
 import torch
 import torchaudio
-from hearbaseline.util import frame_audio
 
 
 # Number of frames to batch process for timestamp embeddings

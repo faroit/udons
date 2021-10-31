@@ -1,4 +1,4 @@
-from src.models.modules.audiojigsaw_net import LSTMJigsaw
+from udons.models.modules.audiojigsaw_net import LSTMJigsaw
 from typing import Any, List
 
 import torch
@@ -26,7 +26,7 @@ class JigsawLSTMModel(LightningModule):
         self.model = LSTMJigsaw(hparams=self.hparams)
 
         # loss function
-        self.criterion = torch.nn.MSELoss()
+        self.criterion = torch.nn.CrossEntropyLoss()
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch

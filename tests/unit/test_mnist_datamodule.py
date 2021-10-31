@@ -3,7 +3,7 @@ import os
 import pytest
 import torch
 
-from src.datamodules.jigsawaudio_datamodule import JigsawAudioDataModule
+from udons.datamodules.jigsawaudio_datamodule import JigsawAudioDataModule
 
 
 @pytest.mark.parametrize("batch_size", [32, 128])

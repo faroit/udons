@@ -1,12 +1,12 @@
-_target_: src.models.jigsaw_transformer_model.JigsawTransformerModel
+_target_: udons.models.jigsaw_transformer_model.JigsawTransformerModel
 
 lr: 0.01
 weight_decay: 0.0005
-nb_classes: '${datamodule: nb_classes}'
-nb_patches: '${datamodule: nb_patches}'
-nb_channels: '${datamodule: nb_channels}'
-n_mels: '${datamodule: n_mels}'
-patch_len: '${datamodule: patch_len}'
+nb_classes: "${datamodule: nb_classes}"
+nb_patches: "${datamodule: nb_patches}"
+nb_channels: "${datamodule: nb_channels}"
+n_mels: "${datamodule: n_mels}"
+patch_len: "${datamodule: patch_len}"
 depth: 3
 heads: 8
 dim_head: 64

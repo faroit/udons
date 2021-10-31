@@ -12,7 +12,7 @@ from pytorch_lightning import (
 from pytorch_lightning.loggers import LightningLoggerBase
 from torch.utils import data
 
-from src.utils import utils
+from udons.utils import utils
 
 log = utils.get_logger(__name__)
 
