@@ -1,4 +1,4 @@
-# 🍜 UDONS baseline for HEAR
+# 🍜 UDONS baseline for HEAR Challenge
 
 ## Installation
 
