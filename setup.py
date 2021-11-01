@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 long_description = open("README.md", "r").read()
 
 setup(
-    name="udonsbaseline",
+    name="udons",
     description="(HEAR) 2021 -- UDONS Baseline Model",
     author="Fabian-Robert Stöter",
     author_email="mail@faroit.com",

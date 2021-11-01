@@ -1,1 +1,0 @@
-CUDA_VISIBLE_DEVICES="2" time python3 -m heareval.embeddings.runner naive --tasks-dir /disk1/1000324719/hear-2021.0.3/tasks --embeddings-dir /disk1/1000324719/embeddings

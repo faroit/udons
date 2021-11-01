@@ -71,6 +71,8 @@ def load_model(model_file_path: str = "") -> torch.nn.Module:
     model.eval()
     model.sample_rate = 16000  # sample rate
     model.embedding_size = lightning_model.hparams["model_dim"]  # model_dim  TODO: get from configs
+    model.scene_embedding_size = model.embedding_size
+    model.timestamp_embedding_size = model.embedding_size
     return model
 
 
